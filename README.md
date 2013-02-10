@@ -176,5 +176,5 @@ As you can see, `CDispatchPtr` is about 60% slower than using native calls.
 That's quite a significant slowdown. However, as I mentioned, this was
 repeating a loop 1000 times (on my PIII 500MHz). The inner loop performed 13
 Get/Put/Invoke operations, for a total of 13,000 operations. Considering that
-`CDispatchPtr completed that in 2.33 seconds, it's clear that in most cases, the
+`CDispatchPtr` completed that in 2.33 seconds, it's clear that in most cases, the
 extra overhead of `IDispatch` is not a problem.
