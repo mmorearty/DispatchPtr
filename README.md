@@ -13,7 +13,7 @@ code like this:
     CDispatchPtr htmldoc = ...;
 
     _bstr_t html = htmldoc.Get("body").Get("innerHTML");
-    htmldoc.Put("title", "New Title");
+    htmldoc.Set("title", "New Title");
     htmldoc.Get("body").Get("firstChild").Invoke(
         "insertAdjacentText", "afterBegin", "hello world");
 ```
@@ -50,16 +50,16 @@ legal:
     CDispatchPtr htmlElement = myDispatch.Get("body").Get("firstChild");
 ```
 
-**Put(property, \_variant\_t value)   <br>
-PutRef(property, \_variant\_t value)**
+**Set(property, \_variant\_t value)   <br>
+SetRef(property, \_variant\_t value)**
 
 Sets the value of a property. \_variant\_t supports implicit casting from a
 number of common types, so all of the following are legal:  
 
 ```c++
-    myDispatch.Put("length", 3L);  
-    myDispatch.Put("title", "New Title");  
-    myDispatch.PutRef("body", (IDispatch*) mybody);
+    myDispatch.Set("length", 3L);  
+    myDispatch.Set("title", "New Title");  
+    myDispatch.SetRef("body", (IDispatch*) mybody);
 ```
 
 **Invoke(method, ...)**
@@ -74,22 +74,22 @@ Examples:
     long difference = myDispatch.Invoke("difference", 3L, 4L);
 ```
 
-## Put() vs. PutRef()
+## Set() vs. SetRef()
 
-The difference between Put() and PutRef() is subtle and annoying. If you know
-Visual Basic, then the easiest way to explain it is that PutRef() is used for
-VB's "Set" keyword, e.g. "Set x = y", and Put() is used for regular value
+The difference between Set() and SetRef() is subtle and annoying. If you know
+Visual Basic, then the easiest way to explain it is that SetRef() is used for
+VB's "Set" keyword, e.g. "Set x = y", and Set() is used for regular value
 assignment, e.g. "x = y".
 
-PutRef() sets the value of a property to be a _reference_ to the passed-in
+SetRef() sets the value of a property to be a _reference_ to the passed-in
 value. This only makes sense if the passed-in value is of type `(IDispatch*)` or
 `(IUnknown*)`.
 
-In most cases, you'll just use `Put()`.
+In most cases, you'll just use `Set()`.
 
 ## CDispatchPtr, IDispatchPtr, and Exceptions
 
-`CDispatchPtr` is a subclass of `IDispatchPtr`, with the Get/Put/PutRef/Invoke
+`CDispatchPtr` is a subclass of `IDispatchPtr`, with the Get/Set/SetRef/Invoke
 methods added. `IDispatchPtr` is `_com_ptr_t` templated on `IDispatch`.
 
 Because of this, any place in your code where you would have used an
@@ -164,7 +164,7 @@ With `CDispatchPtr`, though, it's much easier to write, and also to read:
 I ran some crude timing tests to compare C++ native calls, C++ with
 `CDispatchPtr` (and thus `IDispatch`), and Javascript (which also uses `IDispatch`).
 In each case, the code repeated a loop 1000 times, and inside the loop, the
-code did a number of Get/Put/Invoke operations on an HTML document.
+code did a number of Get/Set/Invoke operations on an HTML document.
 
 Here are the results:
 
@@ -175,6 +175,6 @@ Here are the results:
 As you can see, `CDispatchPtr` is about 60% slower than using native calls.
 That's quite a significant slowdown. However, as I mentioned, this was
 repeating a loop 1000 times (on my PIII 500MHz). The inner loop performed 13
-Get/Put/Invoke operations, for a total of 13,000 operations. Considering that
+Get/Set/Invoke operations, for a total of 13,000 operations. Considering that
 `CDispatchPtr` completed that in 2.33 seconds, it's clear that in most cases, the
 extra overhead of `IDispatch` is not a problem.

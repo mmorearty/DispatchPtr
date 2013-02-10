@@ -9,13 +9,13 @@
 // CDispatchPtr is a wrapper for an IDispatch pointer.  It inherits from, and
 // thus shares capabilities with, the C runtime's IDispatchPtr class.
 //
-// What CDispatchPtr adds is member functions to make it very easy to get/put
+// What CDispatchPtr adds is member functions to make it very easy to get/set
 // properties and invoke methods via IDispatch.  Some examples:
 //
 //		CDispatchPtr htmlDoc; // assume this points to an IE HTML document
 //
 //		_bstr_t title = htmlDoc.Get("title");
-//		htmlDoc.Put("title", "new title");
+//		htmlDoc.Set("title", "new title");
 //		htmldoc.Get("body").Get("firstChild").Invoke(
 //						"insertAdjacentText", "afterBegin", "hello world");
 //		_bstr_t html = htmldoc.Get("body").Get("innerHTML");
@@ -43,13 +43,13 @@ public:
 	template <class DispatchItem>
 	CDispatchVariant Get(DispatchItem property);
 
-	// Put: put a property's value
+	// Set: set a property's value
 	template <class DispatchItem>
-	void Put(DispatchItem property, const _variant_t& value);
+	void Set(DispatchItem property, const _variant_t& value);
 
-	// PutRef: put a reference to a property's value
+	// SetRef: set a reference to a property's value
 	template <class DispatchItem>
-	void PutRef(DispatchItem property, const _variant_t& value);
+	void SetRef(DispatchItem property, const _variant_t& value);
 
 	// Invoke: invoke a method
 	template <class DispatchItem>
@@ -137,15 +137,15 @@ protected:
 		IDispatch* disp = *(Derived*)this;
 		DISPPARAMS dispparams = { const_cast<VARIANT*>(params), 0, cParams, 0 };
 		HRESULT hr;
-		DISPID dispidPut;
+		DISPID dispidSet;
 
 		if (invokeType == DISPATCH_PROPERTYPUT ||
 			invokeType == DISPATCH_PROPERTYPUTREF)
 		{
-			dispidPut = DISPID_PROPERTYPUT;
+			dispidSet = DISPID_PROPERTYPUT;
 
 			dispparams.cNamedArgs = 1;
-			dispparams.rgdispidNamedArgs = &dispidPut;
+			dispparams.rgdispidNamedArgs = &dispidSet;
 		}
 
 		// A hard-coded assumption that "result" does NOT already
@@ -231,11 +231,11 @@ protected:
 //-----------------------------------------------------------------------------
 // CDispatchVariant - a helper class for internal use, usually not needed by
 // users of this code, but possibly useful on occasion.  This subclasses
-// _variant_t and provides it with the Get/Put/PutRef/Invoke methods.  It only
+// _variant_t and provides it with the Get/Set/SetRef/Invoke methods.  It only
 // makes sense to do that if the _variant_t contains, or can be cast to, an
 // IDispatch pointer -- that is, V_VT(variant) == VT_DISPATCH.
 //
-// In the Get/Put/PutRef/Invoke methods from CDispatchFunctions, the expression
+// In the Get/Set/SetRef/Invoke methods from CDispatchFunctions, the expression
 // "*(Derived*)this" is used where an (IDispatch*) is needed.  In the case
 // of CDispatchVariant, that expression will succeed if the variant contains
 // (or can be cast to) and (IDispatch*), and will throw a _com_error object
@@ -295,7 +295,7 @@ public:
 //-----------------------------------------------------------------------------
 // CDispatchPtr - the main class
 //
-// Use this class wherever you would have used IDispatchPtr.  Then, to get/put
+// Use this class wherever you would have used IDispatchPtr.  Then, to get/set
 // properties and invoke methods, use the Get, Set, and Invoke members
 // inherited from CDispatchFunctions.
 //-----------------------------------------------------------------------------
@@ -345,18 +345,18 @@ CDispatchVariant CDispatchFunctions<Derived>::Get(DispatchItem property)
 	return result;
 }
 
-// Put: put a property's value
+// Set: set a property's value
 template <class Derived>
 template <class DispatchItem>
-void CDispatchFunctions<Derived>::Put(DispatchItem property, const _variant_t& value)
+void CDispatchFunctions<Derived>::Set(DispatchItem property, const _variant_t& value)
 {
 	InvokeHelper(property, &value, 1, DISPATCH_PROPERTYPUT, NULL);
 }
 
-// PutRef: put a reference to a property's value
+// SetRef: set a reference to a property's value
 template <class Derived>
 template <class DispatchItem>
-void CDispatchFunctions<Derived>::PutRef(DispatchItem property, const _variant_t& value)
+void CDispatchFunctions<Derived>::SetRef(DispatchItem property, const _variant_t& value)
 {
 	InvokeHelper(property, &value, 1, DISPATCH_PROPERTYPUTREF, NULL);
 }
