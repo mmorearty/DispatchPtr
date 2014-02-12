@@ -43,6 +43,15 @@ public:
 	template <class DispatchItem>
 	CDispatchVariant Get(DispatchItem property);
 
+	template <class DispatchItem>
+	CDispatchVariant Get(DispatchItem property,
+							const _variant_t& arg1);
+
+	template <class DispatchItem>
+	CDispatchVariant Get(DispatchItem property,
+							const _variant_t& arg1,
+							const _variant_t& arg2);
+
 	// Set: set a property's value
 	template <class DispatchItem>
 	void Set(DispatchItem property, const _variant_t& value);
@@ -138,6 +147,8 @@ protected:
 		DISPPARAMS dispparams = { const_cast<VARIANT*>(params), 0, cParams, 0 };
 		HRESULT hr;
 		DISPID dispidSet;
+		EXCEPINFO excepInfo;
+		SecureZeroMemory(&excepInfo, sizeof(EXCEPINFO));
 
 		if (invokeType == DISPATCH_PROPERTYPUT ||
 			invokeType == DISPATCH_PROPERTYPUTREF)
@@ -154,9 +165,18 @@ protected:
 			V_VT(result) = VT_EMPTY;
 
 		hr = disp->Invoke(dispatchItem, IID_NULL, LOCALE_SYSTEM_DEFAULT,
-			invokeType, &dispparams, result, NULL, NULL);
+			invokeType, &dispparams, result, &excepInfo, NULL);
 		if (FAILED(hr))
+		{
+			if (hr == DISP_E_EXCEPTION)
+			{
+				if (excepInfo.wCode != 0)
+					hr = _com_error::WCodeToHRESULT(excepInfo.wCode);
+				else if (excepInfo.scode != 0)
+					hr = excepInfo.scode;
+			}
 			_com_raise_error(hr);
+		}
 	}
 
 	// dispatchItem is (wchar_t*) -- convert it to a DISPID
@@ -167,10 +187,11 @@ protected:
 					  VARIANT* result)
 	{
 		IDispatch* disp = *(Derived*)this;
-		DISPID dispid;
-		HRESULT hr;
+		if (!disp)
+			throw _com_error(E_POINTER);
 
-		hr = disp->GetIDsOfNames(IID_NULL, const_cast<LPOLESTR*>(&dispatchItem), 1,
+		DISPID dispid;
+		HRESULT hr = disp->GetIDsOfNames(IID_NULL, const_cast<LPOLESTR*>(&dispatchItem), 1,
 			LOCALE_SYSTEM_DEFAULT, &dispid);
 		if (FAILED(hr))
 		{
@@ -190,6 +211,7 @@ protected:
 		InvokeHelper(dispid, params, cParams, invokeType, result);
 	}
 
+#ifndef _UNICODE
 	// dispatchItem is an Ansi LPSTR  -- convert it to an LPOLESTR
 	void InvokeHelper(LPCSTR dispatchItem,
 					  const VARIANT* params,
@@ -225,6 +247,7 @@ protected:
 		if (wideName != nameBuff)
 			delete[] wideName;
 	}
+#endif
 };
 
 
@@ -342,6 +365,31 @@ CDispatchVariant CDispatchFunctions<Derived>::Get(DispatchItem property)
 {
 	VARIANT result;
 	InvokeHelper(property, NULL, 0, DISPATCH_PROPERTYGET, &result);
+	return result;
+}
+
+template <class Derived>
+template <class DispatchItem>
+CDispatchVariant CDispatchFunctions<Derived>::Get(DispatchItem property,
+						const _variant_t& arg1)
+{
+	VARIANT result;
+	InvokeHelper(property, &arg1, 1, DISPATCH_PROPERTYGET, &result);
+	return result;
+}
+
+template <class Derived>
+template <class DispatchItem>
+CDispatchVariant CDispatchFunctions<Derived>::Get(DispatchItem property,
+						const _variant_t& arg1,
+						const _variant_t& arg2)
+{
+	VARIANT result;
+	VARIANT args[2];
+
+	args[0] = arg2;
+	args[1] = arg1;
+	InvokeHelper(property, args, 2, DISPATCH_PROPERTYGET, &result);
 	return result;
 }
 
