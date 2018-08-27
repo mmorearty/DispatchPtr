@@ -139,7 +139,7 @@ public:
 protected:
 	void InvokeHelper(DISPID dispatchItem,
 					  const VARIANT* params,
-					  int cParams,
+					  UINT cParams,
 					  WORD invokeType,
 					  VARIANT* result)
 	{
@@ -182,7 +182,7 @@ protected:
 	// dispatchItem is (wchar_t*) -- convert it to a DISPID
 	void InvokeHelper(LPCOLESTR dispatchItem,
 					  const VARIANT* params,
-					  int cParams,
+					  UINT cParams,
 					  WORD invokeType,
 					  VARIANT* result)
 	{
@@ -215,7 +215,7 @@ protected:
 	// dispatchItem is an Ansi LPSTR  -- convert it to an LPOLESTR
 	void InvokeHelper(LPCSTR dispatchItem,
 					  const VARIANT* params,
-					  int cParams,
+					  UINT cParams,
 					  WORD invokeType,
 					  VARIANT* result)
 	{
